@@ -1,4 +1,3 @@
-
 MENU = {
     "espresso": {
         "ingredients": {
@@ -25,6 +24,7 @@ MENU = {
     }
 }
 
+
 resources = {
     "water": 300,
     "milk": 200,
@@ -32,95 +32,86 @@ resources = {
 }
 
 
-# TODO 2. Ability to print report
-
-
 def print_report():
+    """Function to print report of current resources in machine"""
     for key, value in resources.items():
-        print(key,':', value)
-    return f'money : ${money}'
+        print(key, ':', value)
+    print(f'money : ${profit}')
 
 
-# TODO 1. Prompt option and display price
-print('Coco\'s Coffee Machine')
-print('Espresso: $1.50 | Latte: $2.50 | Cappuccino: $3.00')
-drink_choice = input('\nWhat would you like today? (Espresso, Latte, Cappuccino): ').lower()
-
-
-# TODO 3. Check if resources are sufficient
-
-
-def resource_check(drink_choice):
-    water_req = MENU[drink_choice]['ingredients']['water']
-    milk_req = MENU[drink_choice]['ingredients']['milk']
-    coffee_req = MENU[drink_choice]['ingredients']['coffee']
-
-    water_available = resources['water']
-    milk_available = resources['milk']
-    coffee_available = resources['coffee']
-
-    if water_available > water_req and milk_available > milk_req and coffee_available > coffee_req:
-        return True
-    else:
-        return False
-
-
-def resource_shortage(drink_choice):
-    water_req = MENU[drink_choice]['ingredients']['water']
-    milk_req = MENU[drink_choice]['ingredients']['milk']
-    coffee_req = MENU[drink_choice]['ingredients']['coffee']
-
-    water_available = resources['water']
-    milk_available = resources['milk']
-    coffee_available = resources['coffee']
-
-    if water_available < water_req:
-        return 'Sorry there is not enough water'
-    elif milk_available < milk_req:
-        return 'Sorry there is not enough milk'
-    elif coffee_available < coffee_req:
-        return 'Sorry there is not enough coffee'
+def resource_check(order_ingredients):
+    """Function to confirm if requested drink can be made based on available resources"""
+    for item in order_ingredients:
+        if order_ingredients[item] > resources[item]:
+            print(f"Sorry there is not enough {item}.")
+            return False
+        else:
+            return True
 
 
 def transaction_check(drink_choice, coin_total):
+    """Function to confirm if payment provided meets cost of drink"""
     drink_total = MENU[drink_choice]['cost']
     if coin_total > drink_total:
-        money += drink_total
-        change = coin_total - drink_total
-        return f'Here is ${change} in change.'
+        return True
     elif coin_total == drink_total:
-        money += coin_total
+        return True
+    elif drink_total > coin_total:
+        return False
+
+
+def calculate_change(drink_choice, coin_total):
+    """Function to calculate if payment excess or shortage exists"""
+    drink_total = MENU[drink_choice]['cost']
+    if coin_total > drink_total:
+        change = round(coin_total - drink_total, 2)
+        print(f'Here is ${change} in change.')
+        global profit
+        profit += drink_total
+        return True
     elif drink_total > coin_total:
         return f'Sorry, that is not enough money. Money refunded'
-#
-# if not resource_check:
-#     print(resource_shortage(drink_choice))
-#
-#
-# print(resource_check(drink_choice))
-# print(resource_shortage(drink_choice))
-# print(resource_check('latte'))
-money = 0
-
-# TODO 4. Ability to process coins
-# if resource_check:
-print('Your total is cost. Please insert coins')
-num_of_quarters = int(input('How many quarters? '))
-num_of_nickels = int(input('How many nickels? '))
-num_of_dimes = int(input('How many dimes? '))
-num_of_pennies = int(input('How many pennies? '))
-
-coin_total = (num_of_quarters * 0.25) + (num_of_nickels * 0.05) + (num_of_dimes * 0.10) + (num_of_pennies * 0.01)
-
-print(coin_total)
-print(transaction_check(drink_choice, coin_total))
 
 
+def payment():
+    """Function to collect payment and calculate total"""
+    total = 0
+    print('Please insert coins:')
+    total += int(input('How many quarters? ')) * 0.25
+    total += int(input('How many nickels? ')) * 0.05
+    total += int(input('How many dimes? ')) * 0.10
+    total += int(input('How many pennies? ')) * 0.01
+    return total
 
-# TODO 5. Ability to check that transaction was successful
 
-# TODO 6. Make coffee (deduct ingredients from resources)
+def make_coffee(choice, order_ingredients):
+    """Deduct the required ingredients from the resources."""
+    for item in order_ingredients:
+        resources[item] -= order_ingredients[item]
+    return f"Here is your {choice}. Enjoy!"
 
-# TODO 7. Ability to purchase another (loop)
 
-# TODO 8. Turn off by entering off prompt
+def start_machine():
+    is_on = True
+    while is_on:
+
+        print('\nCoco\'s Coffee Machine')
+        print('Espresso: $1.50 | Latte: $2.50 | Cappuccino: $3.00')
+        choice = input('\nWhat would you like today? (Espresso, Latte, Cappuccino): ').lower()
+
+        if choice == "off":
+            print('Shut down process commence')
+            return False
+        elif choice == "report":
+            print_report()
+        else:
+            drink = (MENU[choice])
+            if resource_check(drink['ingredients']):
+                coin_total = payment()
+                calculate_change(choice, coin_total)
+                print(make_coffee(choice, drink['ingredients']))
+
+
+profit = 0
+
+start_machine()
